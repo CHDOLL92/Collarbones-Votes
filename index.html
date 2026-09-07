@@ -27,7 +27,7 @@ body {
 
 /* ── Screens ── */
 .screen { display: none; }
-.screen.show { display: flex; flex-direction: column; min-height: 100vh; }
+.screen.show { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
 .screen.centered { align-items: center; justify-content: center; padding: 20px; }
 
 /* ── Setup ── */
@@ -167,7 +167,7 @@ body {
 /* ── Main body ── */
 .app-body {
   display: grid; grid-template-columns: minmax(0,1.3fr) minmax(0,1fr);
-  flex: 1;
+  flex: 1; min-height: 0; overflow: hidden;
 }
 @media (max-width: 740px) { .app-body { grid-template-columns: 1fr; } }
 
@@ -176,6 +176,7 @@ body {
   padding: 18px; background: var(--card2);
   border-right: 1px solid var(--border);
   display: flex; flex-direction: column; gap: 10px;
+  overflow-y: auto; min-height: 0;
 }
 .list-section h2 { font-size: 14px; font-weight: 700; }
 .search-box {
@@ -186,7 +187,7 @@ body {
 .search-box:focus { border-color: var(--green); }
 .song-list {
   flex: 1; overflow-y: auto; display: flex; flex-direction: column;
-  gap: 3px; max-height: 52vh;
+  gap: 3px; min-height: 0;
 }
 .song-list::-webkit-scrollbar { width: 4px; }
 .song-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
@@ -216,6 +217,7 @@ body {
 .vote-section {
   padding: 20px; background: var(--card);
   display: flex; flex-direction: column; gap: 18px;
+  overflow-y: auto; min-height: 0;
 }
 .vote-section h2 { font-size: 14px; font-weight: 700; }
 .blk-lbl {
@@ -255,7 +257,7 @@ body {
 .no-votes { color: var(--dim); font-size: 13px; }
 
 /* ── Leaderboard ── */
-.lb-section { border-top: 1px solid var(--border); padding: 20px; background: var(--card2); flex-shrink: 0; }
+.lb-section { border-top: 1px solid var(--border); padding: 20px; background: var(--card2); overflow-y: auto; max-height: 320px; flex-shrink: 0; }
 .lb-hdr { display: flex; align-items: baseline; gap: 12px; margin-bottom: 14px; }
 .lb-hdr h2 { font-size: 16px; font-weight: 700; }
 .lb-sum { color: var(--dim); font-size: 13px; }
@@ -737,7 +739,7 @@ function renderList() {
 
 function renderMembers() {
   document.getElementById('member-btns').innerHTML = members.map(n =>
-    `<button class="member-btn${member===n?' active':''}" data-name="${esc(n)}" onclick="selectMember(${JSON.stringify(n)})">${esc(n)}</button>`
+    `<button class="member-btn${member===n?' active':''}" data-name="${esc(n)}" onclick="selectMember(this.dataset.name)">${esc(n)}</button>`
   ).join('');
 }
 
