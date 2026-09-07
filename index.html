@@ -589,7 +589,9 @@ function playTrackById(id, autoPlay = true) {
   if (!t.preview) {
     toast('No preview available for this song');
   } else {
+    audio.pause();
     audio.src = t.preview;
+    audio.load();
     if (autoPlay) audio.play().catch(() => {});
   }
 
