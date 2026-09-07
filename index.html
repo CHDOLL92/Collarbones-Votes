@@ -451,6 +451,7 @@ const K_MEMBERS = 'csdt_members';
 const K_VOTES   = 'csdt_votes';
 const K_TRACKS  = 'csdt_tracks';
 const K_PL      = 'csdt_playlist';
+const DEFAULT_PL = 'https://www.deezer.com/en/playlist/15728636741';
 const DEFAULT_M = ['Leslie','Karim','Pierre','Hervé','Charly'];
 
 /* ══ STATE ══ */
@@ -809,7 +810,7 @@ function renderLeaderboard() {
 
 /* ══ SETUP ══ */
 function initSetup() {
-  const saved = localStorage.getItem(K_PL) || '';
+  const saved = localStorage.getItem(K_PL) || DEFAULT_PL;
   document.getElementById('inp-playlist').value = saved;
   const grid = document.getElementById('member-grid');
   grid.innerHTML = members.map((n,i) =>
@@ -904,8 +905,25 @@ async function boot() {
     tracks = cached;
     launchApp();
   } else {
-    initSetup();
-    showScreen('s-setup');
+    // Auto-load default playlist on first visit — skip setup screen
+    const pid = extractPlaylistId(DEFAULT_PL);
+    if (pid) {
+      showScreen('s-loading');
+      document.getElementById('load-msg').textContent = 'Loading playlist…';
+      try {
+        tracks = await fetchDeezerTracks(pid);
+        if (!tracks.length) throw new Error('No tracks found');
+        localStorage.setItem(K_TRACKS, JSON.stringify({ tracks, pid, ts: Date.now() }));
+        localStorage.setItem(K_PL, DEFAULT_PL);
+        launchApp();
+      } catch(e) {
+        initSetup();
+        showScreen('s-setup');
+      }
+    } else {
+      initSetup();
+      showScreen('s-setup');
+    }
   }
 }
 
