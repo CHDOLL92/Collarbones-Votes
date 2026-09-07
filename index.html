@@ -92,11 +92,24 @@ body {
 /* ── App Header ── */
 .app-header {
   background: var(--card); border-bottom: 1px solid var(--border);
-  padding: 12px 20px; display: flex; align-items: center;
+  padding: 10px 20px; display: flex; align-items: center;
   justify-content: space-between; gap: 12px;
   position: sticky; top: 0; z-index: 50; flex-shrink: 0;
 }
 .app-title { font-size: 19px; font-weight: 800; color: var(--accent); white-space: nowrap; }
+.band-hero {
+  width: 100%; max-height: 220px; object-fit: cover; object-position: center top;
+  display: block; flex-shrink: 0;
+}
+.band-hero-wrap {
+  position: relative; flex-shrink: 0; overflow: hidden;
+  max-height: 220px;
+}
+.band-hero-wrap::after {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 60px;
+  background: linear-gradient(transparent, var(--bg));
+  pointer-events: none;
+}
 .hdr-right { display: flex; align-items: center; gap: 10px; }
 .hdr-count { color: var(--dim); font-size: 13px; }
 .btn-sm {
@@ -288,12 +301,13 @@ body {
     <h1>Collarbones song tour</h1>
     <p class="tagline">SAP Music Association · Song Voting App</p>
 
-    <div class="fl">
+      <div class="fl">
       <label>Deezer Playlist URL or ID</label>
-      <input id="inp-playlist" type="text" placeholder="https://www.deezer.com/playlist/...  or just the ID">
+      <input id="inp-playlist" type="text" placeholder="https://www.deezer.com/playlist/...">
       <div class="hint">
-        Free — no login needed. Find your playlist on <a href="https://www.deezer.com" target="_blank">deezer.com</a>
-        and paste the URL here.
+        ⚠ Short links (link.deezer.com/…) won't work — open the link in your browser first,
+        then copy the full URL from the address bar.<br>
+        Find playlists at <a href="https://www.deezer.com" target="_blank">deezer.com</a>
       </div>
     </div>
 
@@ -333,6 +347,12 @@ body {
       <button class="btn-sm" onclick="goSetup()">⚙ Change playlist</button>
     </div>
   </header>
+
+  <!-- Band photo -->
+  <div class="band-hero-wrap" id="band-hero-wrap">
+    <img class="band-hero" id="band-hero" src="band.jpg" alt="Collarbone band"
+      onerror="document.getElementById('band-hero-wrap').style.display='none'">
+  </div>
 
   <!-- Player Bar -->
   <div class="player-bar" id="player-bar">
@@ -428,7 +448,7 @@ const K_MEMBERS = 'csdt_members';
 const K_VOTES   = 'csdt_votes';
 const K_TRACKS  = 'csdt_tracks';
 const K_PL      = 'csdt_playlist';
-const DEFAULT_M = ['Alice','Bob','Charlie','Dave','Eve'];
+const DEFAULT_M = ['Leslie','Karim','Pierre','Hervé','Charly'];
 
 /* ══ STATE ══ */
 let tracks   = [];
@@ -483,6 +503,7 @@ function extractPlaylistId(input) {
   const m = input.match(/playlist\/(\d+)/);
   if (m) return m[1];
   if (/^\d+$/.test(input.trim())) return input.trim();
+  // Short link or unrecognised format
   return null;
 }
 
@@ -770,7 +791,14 @@ async function loadPlaylist() {
   const raw = document.getElementById('inp-playlist').value.trim();
   if (!raw) { toast('Paste your Deezer playlist URL'); return; }
   const pid = extractPlaylistId(raw);
-  if (!pid) { toast('Could not find a playlist ID in that URL'); return; }
+  if (!pid) {
+    showError(
+      'Short links like link.deezer.com cannot be used directly.\n\n' +
+      'Please open the link in your browser, then copy the full URL from the address bar.\n' +
+      'It should look like: https://www.deezer.com/playlist/1234567890'
+    );
+    return;
+  }
 
   const mbrs = Array.from(document.querySelectorAll('.m-inp'))
     .map((el,i) => el.value.trim() || DEFAULT_M[i]);
