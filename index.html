@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Collarbones song tour</title>
+<style>
+:root {
+  --bg: #0d0d18;
+  --card: #181828;
+  --card2: #12121f;
+  --border: #2a2a45;
+  --accent: #e03c5a;
+  --green: #1db954;
+  --green2: #1ed760;
+  --text: #f0eef8;
+  --dim: #7a789a;
+  --star: #fbbf24;
+  --radius: 14px;
+  --shadow: 0 8px 32px rgba(0,0,0,0.5);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* ── Screens ── */
+.screen { display: none; }
+.screen.show-block { display: block; }
+.screen.show-flex {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+/* ── Setup ── */
+.setup-wrap { display: flex; flex-direction: column; align-items: center; width: 100%; }
+
+.setup-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 40px 44px;
+  max-width: 520px;
+  width: 100%;
+  box-shadow: var(--shadow);
+}
+
+.setup-logo { font-size: 42px; text-align: center; margin-bottom: 10px; }
+
+.setup-card h1 {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--accent);
+  text-align: center;
+  letter-spacing: -0.02em;
+  margin-bottom: 4px;
+}
+
+.setup-card .tagline { color: var(--dim); text-align: center; font-size: 14px; margin-bottom: 32px; }
+
+.fl { margin-bottom: 22px; }
+
+.fl label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--dim);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 8px;
+}
+
+.fl input[type="text"] {
+  width: 100%;
+  padding: 12px 14px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  color: var(--text);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.fl input[type="text"]:focus { border-color: var(--accent); }
+
+.help-link {
+  display: inline-block;
+  margin-top: 7px;
+  color: var(--green);
+  font-size: 12px;
+  text-decoration: none;
+}
+.help-link:hover { text-decoration: underline; }
+
+.member-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.member-grid input { padding: 10px 12px; font-size: 13px; }
+
+.redirect-note {
+  margin-top: 18px;
+  padding: 12px 14px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 8px;
+  font-size: 12px;
+  color: var(--dim);
+  line-height: 1.5;
+}
+.redirect-note code {
+  color: var(--green);
+  font-family: monospace;
+  word-break: break-all;
+}
+
+.btn-primary {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  background: var(--green);
+  color: #000;
+  border: none;
+  border-radius: 9px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+  margin-top: 6px;
+}
+.btn-primary:hover { background: var(--green2); }
+.btn-primary:active { transform: scale(0.98); }
+
+/* ── Loading ── */
+.loading-inner { display: flex; flex-direction: column; align-items: center; gap: 18px; }
+.spinner {
+  width: 44px; height: 44px;
+  border: 3px solid var(--border);
+  border-top-color: var(--green);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-txt { color: var(--dim); font-size: 15px; }
+
+/* ── Error ── */
+.error-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 36px;
+  max-width: 480px;
+  text-align: center;
+  box-shadow: var(--shadow);
+}
+.error-card h2 { font-size: 20px; margin-bottom: 12px; }
+.error-card p { color: var(--dim); font-size: 14px; margin-bottom: 24px; line-height: 1.5; }
+
+/* ── Main App ── */
+#screen-main { flex-direction: column; }
+
+.app-header {
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.app-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--accent);
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-count { color: var(--dim); font-size: 13px; white-space: nowrap; }
+
+.btn-settings {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  color: var(--dim);
+  font-size: 13px;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-settings:hover { border-color: var(--accent); color: var(--text); }
+
+.app-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  min-height: calc(100vh - 55px - 360px);
+}
+
+@media (max-width: 720px) {
+  .app-body { grid-template-columns: 1fr; }
+}
+
+/* ── Player ── */
+.player-section {
+  padding: 28px;
+  background: var(--card2);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+#album-art {
+  width: 210px;
+  height: 210px;
+  border-radius: 12px;
+  object-fit: cover;
+  box-shadow: var(--shadow);
+  background: var(--card);
+}
+
+.track-meta { text-align: center; width: 100%; }
+
+.track-name {
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1.3;
+  margin-bottom: 5px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.artist-name { font-size: 14px; color: var(--dim); }
+
+.progress-wrap { width: 100%; }
+
+.time-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--dim);
+  margin-bottom: 7px;
+  font-variant-numeric: tabular-nums;
+}
+
+#seek-bar {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border);
+  outline: none;
+  cursor: pointer;
+}
+#seek-bar::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--text);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+#seek-bar::-webkit-slider-thumb:hover { background: var(--accent); }
+
+.controls-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ctrl-btn {
+  background: none;
+  border: none;
+  color: var(--dim);
+  cursor: pointer;
+  padding: 9px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s, background 0.15s;
+}
+.ctrl-btn:hover { color: var(--text); background: rgba(255,255,255,0.06); }
+.ctrl-btn svg { display: block; }
+
+#btn-play-pause {
+  background: var(--text);
+  color: var(--bg);
+  width: 50px; height: 50px;
+}
+#btn-play-pause:hover { background: #fff; color: var(--bg); }
+
+#btn-shuffle { transition: color 0.15s; }
+#btn-shuffle.on { color: var(--green); }
+
+.embed-hidden {
+  position: fixed;
+  left: -9999px;
+  width: 320px;
+  height: 90px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* ── Vote Panel ── */
+.vote-section {
+  padding: 28px;
+  background: var(--card);
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.vote-section h2 { font-size: 16px; font-weight: 700; }
+
+.section-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--dim);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 10px;
+}
+
+.member-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.member-btn {
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: 2px solid var(--border);
+  background: transparent;
+  color: var(--dim);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.member-btn:hover { border-color: var(--accent); color: var(--text); }
+.member-btn.active {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+  font-weight: 700;
+}
+
+.stars-wrap { margin-bottom: 6px; }
+
+.stars-row {
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+  margin: 10px 0 8px;
+}
+
+.star-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 34px;
+  color: var(--border);
+  transition: color 0.1s, transform 0.1s;
+  line-height: 1;
+  padding: 2px 4px;
+}
+.star-btn:hover { transform: scale(1.15); }
+.star-btn.lit { color: var(--star); }
+.star-btn.disabled { cursor: default; opacity: 0.5; }
+
+.vote-hint { font-size: 12px; color: var(--dim); text-align: center; min-height: 18px; }
+.vote-ok { font-size: 13px; font-weight: 600; color: var(--green); text-align: center; min-height: 20px; }
+
+.song-votes-list { display: flex; flex-direction: column; gap: 6px; }
+
+.vote-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: var(--bg);
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.voter-name { color: var(--dim); }
+.voter-stars { color: var(--star); letter-spacing: 1px; font-size: 15px; }
+.voter-mine { color: var(--green); font-weight: 600; }
+
+.no-votes-msg { color: var(--dim); font-size: 13px; padding: 8px 0; }
+
+/* ── Leaderboard ── */
+.lb-section {
+  border-top: 1px solid var(--border);
+  padding: 24px 28px;
+  background: var(--card2);
+}
+
+.lb-hdr {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.lb-hdr h2 { font-size: 17px; font-weight: 700; }
+.lb-summary { color: var(--dim); font-size: 13px; }
+
+.lb-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.lb-table thead th {
+  text-align: left;
+  padding: 7px 10px;
+  color: var(--dim);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  border-bottom: 1px solid var(--border);
+}
+
+.lb-table tbody td {
+  padding: 10px 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  vertical-align: middle;
+}
+
+.lb-table tbody tr:last-child td { border-bottom: none; }
+
+.lb-table tbody tr.playing-row { background: rgba(29,185,84,0.06); }
+
+.lb-rank { font-weight: 700; color: var(--dim); width: 32px; font-size: 15px; }
+.lb-song { font-weight: 600; max-width: 200px; }
+.lb-artist { color: var(--dim); max-width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lb-votes { color: var(--dim); text-align: center; }
+.lb-score { font-weight: 700; text-align: center; }
+.lb-avg { color: var(--star); text-align: center; }
+.lb-bar-cell { width: 100px; }
+
+.lb-bar { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.lb-bar-fill { height: 100%; background: linear-gradient(90deg, var(--green), var(--accent)); border-radius: 3px; transition: width 0.4s; }
+
+.lb-empty { color: var(--dim); font-size: 14px; padding: 12px 0; }
+
+/* ── Toast ── */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 20px;
+  font-size: 14px;
+  box-shadow: var(--shadow);
+  opacity: 0;
+  transition: opacity 0.2s, transform 0.2s;
+  pointer-events: none;
+  z-index: 999;
+  white-space: nowrap;
+}
+.toast.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+</style>
+</head>
+<body>
+
+<!-- ── Setup Screen ── -->
+<div id="screen-setup" class="screen show-flex">
+  <div class="setup-wrap">
+    <div class="setup-card">
+      <div class="setup-logo">🎸</div>
+      <h1>Collarbones song tour</h1>
+      <p class="tagline">SAP Music Association · Song Voting App</p>
+
+      <div class="fl">
+        <label>Spotify App Client ID</label>
+        <input id="inp-client" type="text" placeholder="e.g. a1b2c3d4e5f6...">
+        <a class="help-link" href="https://developer.spotify.com/dashboard" target="_blank">→ Create a free Spotify Developer App</a>
+      </div>
+
+      <div class="fl">
+        <label>Member Names (5 members)</label>
+        <div class="member-grid" id="member-grid"></div>
+      </div>
+
+      <button class="btn-primary" onclick="startAuth()">Connect to Spotify →</button>
+
+      <div class="redirect-note">
+        Add this URL as a <strong>Redirect URI</strong> in your Spotify App settings:<br>
+        <code id="redir-display"></code>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Loading Screen ── -->
+<div id="screen-loading" class="screen show-flex">
+  <div class="loading-inner">
+    <div class="spinner"></div>
+    <p class="loading-txt" id="load-msg">Connecting...</p>
+  </div>
+</div>
+
+<!-- ── Error Screen ── -->
+<div id="screen-error" class="screen show-flex">
+  <div class="error-card">
+    <h2>⚠ Something went wrong</h2>
+    <p id="error-msg">Unknown error</p>
+    <button class="btn-primary" onclick="goSetup()">Back to Setup</button>
+  </div>
+</div>
+
+<!-- ── Main App Screen ── -->
+<div id="screen-main" class="screen show-flex">
+
+  <header class="app-header">
+    <div class="app-title">🎸 Collarbones song tour</div>
+    <div class="header-right">
+      <span class="header-count" id="hdr-count"></span>
+      <button class="btn-settings" onclick="goSetup()">⚙ Settings</button>
+    </div>
+  </header>
+
+  <div class="app-body">
+
+    <!-- Player Column -->
+    <section class="player-section">
+      <img id="album-art" src="" alt="Album art">
+
+      <div class="track-meta">
+        <div class="track-name" id="track-name">Loading…</div>
+        <div class="artist-name" id="artist-name">—</div>
+      </div>
+
+      <div class="progress-wrap">
+        <div class="time-row">
+          <span id="t-cur">0:00</span>
+          <span id="t-tot">0:00</span>
+        </div>
+        <input id="seek-bar" type="range" min="0" max="1000" value="0">
+      </div>
+
+      <div class="controls-row">
+        <button id="btn-shuffle" class="ctrl-btn on" title="Shuffle" onclick="toggleShuffle()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/>
+          </svg>
+        </button>
+        <button class="ctrl-btn" title="Previous" onclick="prevTrack()">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/>
+          </svg>
+        </button>
+        <button id="btn-play-pause" class="ctrl-btn" title="Play/Pause" onclick="togglePlay()">
+          <svg id="ico-play" width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M8 5v14l11-7z"/>
+          </svg>
+          <svg id="ico-pause" width="26" height="26" viewBox="0 0 24 24" fill="currentColor" style="display:none">
+            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+          </svg>
+        </button>
+        <button class="ctrl-btn" title="Next" onclick="nextTrack()">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M6 18l8.5-6L6 6v12zm10-12v12h2V6h-2z"/>
+          </svg>
+        </button>
+        <div style="flex:1"></div>
+        <span id="shuffle-label" style="font-size:11px;color:var(--green);padding-right:4px">SHUFFLE ON</span>
+      </div>
+    </section>
+
+    <!-- Vote Column -->
+    <section class="vote-section">
+      <h2>Cast Your Vote</h2>
+
+      <div>
+        <div class="section-label">Who are you?</div>
+        <div class="member-btns" id="member-btns"></div>
+      </div>
+
+      <div class="stars-wrap">
+        <div class="section-label">Rate this song</div>
+        <div class="stars-row" id="stars-row">
+          <button class="star-btn" data-v="1" onclick="castVote(1)">★</button>
+          <button class="star-btn" data-v="2" onclick="castVote(2)">★</button>
+          <button class="star-btn" data-v="3" onclick="castVote(3)">★</button>
+          <button class="star-btn" data-v="4" onclick="castVote(4)">★</button>
+          <button class="star-btn" data-v="5" onclick="castVote(5)">★</button>
+        </div>
+        <div id="vote-hint" class="vote-hint">Select your name first</div>
+        <div id="vote-ok" class="vote-ok"></div>
+      </div>
+
+      <div>
+        <div class="section-label">Votes for this song</div>
+        <div id="song-votes" class="song-votes-list">
+          <div class="no-votes-msg">No votes yet</div>
+        </div>
+      </div>
+    </section>
+
+  </div><!-- .app-body -->
+
+  <!-- Leaderboard -->
+  <section class="lb-section">
+    <div class="lb-hdr">
+      <h2>🏆 Top 10 Songs</h2>
+      <span id="lb-summary" class="lb-summary"></span>
+    </div>
+    <div id="lb-body" class="lb-body">
+      <div class="lb-empty">Vote for songs to see the leaderboard</div>
+    </div>
+  </section>
+
+  <!-- Hidden embed slot -->
+  <div class="embed-hidden">
+    <div id="embed-slot"></div>
+  </div>
+
+</div><!-- #screen-main -->
+
+<!-- Toast -->
+<div id="toast" class="toast"></div>
+
+<script src="https://open.spotify.com/embed/iframe-api/v1" async></script>
+<script>
+/* ══════════════════════════════════════
+   CONFIG
+══════════════════════════════════════ */
+const PLAYLIST_ID  = '0eFbcO3eVkf6TJ9Uk9NLeN';
+const SCOPES       = 'playlist-read-public';
+const TRACK_CACHE  = 'csv_tracks';
+const MEMBERS_KEY  = 'csv_members';
+const VOTES_KEY    = 'csv_votes';
+const CLIENT_KEY   = 'csv_client';
+const TOKEN_KEY    = 'csv_token';
+const EXPIRY_KEY   = 'csv_expiry';
+const VERIFIER_KEY = 'csv_verifier';
+
+const DEFAULT_MEMBERS = ['Alice', 'Bob', 'Charlie', 'Dave', 'Eve'];
+
+/* ══════════════════════════════════════
+   STATE
+══════════════════════════════════════ */
+let tracks   = [];
+let order    = [];
+let idx      = 0;
+let member   = null;
+let votes    = {};
+let members  = DEFAULT_MEMBERS.slice();
+
+let isShuffle = true;
+let isPlaying = false;
+let pos       = 0;
+let dur       = 0;
+let seeking   = false;
+let ctrl      = null;
+let iframeRdy = false;
+let pendUri   = null;
+
+let voteOkTimer = null;
+
+/* ══════════════════════════════════════
+   UTILS
+══════════════════════════════════════ */
+function fmt(ms) {
+  const s = Math.floor(ms / 1000);
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+}
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = (Math.random() * (i + 1)) | 0;
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function toast(msg, ms = 2500) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('visible');
+  setTimeout(() => el.classList.remove('visible'), ms);
+}
+
+/* ══════════════════════════════════════
+   SCREENS
+══════════════════════════════════════ */
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => {
+    s.classList.remove('show-block', 'show-flex');
+  });
+  const el = document.getElementById(id);
+  el.classList.add(id === 'screen-main' ? 'show-flex' : 'show-flex');
+}
+
+function showError(msg) {
+  document.getElementById('error-msg').textContent = msg;
+  showScreen('screen-error');
+}
+
+/* ══════════════════════════════════════
+   PKCE OAUTH
+══════════════════════════════════════ */
+function b64url(buf) {
+  return btoa(String.fromCharCode(...new Uint8Array(buf)))
+    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+}
+
+async function pkce() {
+  const verifier  = b64url(crypto.getRandomValues(new Uint8Array(32)));
+  const hash      = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier));
+  const challenge = b64url(hash);
+  return { verifier, challenge };
+}
+
+function redir() {
+  return location.origin + location.pathname;
+}
+
+async function startAuth() {
+  const clientId = document.getElementById('inp-client').value.trim();
+  if (!clientId) { toast('Enter your Spotify Client ID first'); return; }
+
+  const mInputs = document.querySelectorAll('.m-inp');
+  const newMembers = Array.from(mInputs).map((el, i) => el.value.trim() || DEFAULT_MEMBERS[i]);
+  localStorage.setItem(MEMBERS_KEY, JSON.stringify(newMembers));
+  localStorage.setItem(CLIENT_KEY, clientId);
+
+  const { verifier, challenge } = await pkce();
+  localStorage.setItem(VERIFIER_KEY, verifier);
+
+  const p = new URLSearchParams({
+    client_id: clientId, response_type: 'code',
+    redirect_uri: redir(), code_challenge_method: 'S256',
+    code_challenge: challenge, scope: SCOPES,
+  });
+  location.href = 'https://accounts.spotify.com/authorize?' + p;
+}
+
+async function exchangeCode(code) {
+  const clientId = localStorage.getItem(CLIENT_KEY);
+  const verifier = localStorage.getItem(VERIFIER_KEY);
+  const resp = await fetch('https://accounts.spotify.com/api/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      client_id: clientId, grant_type: 'authorization_code',
+      code, redirect_uri: redir(), code_verifier: verifier,
+    }),
+  });
+  if (!resp.ok) throw new Error('Token exchange failed: ' + await resp.text());
+  const d = await resp.json();
+  localStorage.setItem(TOKEN_KEY, d.access_token);
+  localStorage.setItem(EXPIRY_KEY, Date.now() + (d.expires_in - 120) * 1000);
+  history.replaceState(null, '', location.pathname);
+}
+
+function getToken() {
+  const t = localStorage.getItem(TOKEN_KEY);
+  const e = parseInt(localStorage.getItem(EXPIRY_KEY) || '0');
+  return t && Date.now() < e ? t : null;
+}
+
+/* ══════════════════════════════════════
+   SPOTIFY WEB API
+══════════════════════════════════════ */
+async function fetchTracks(token) {
+  const all = [];
+  let url = `https://api.spotify.com/v1/playlists/${PLAYLIST_ID}/tracks?limit=50&fields=next,items(track(id,uri,name,duration_ms,artists(name),album(images)))`;
+  while (url) {
+    const r = await fetch(url, { headers: { Authorization: 'Bearer ' + token } });
+    if (!r.ok) throw new Error('Playlist fetch failed: ' + r.status);
+    const d = await r.json();
+    for (const item of d.items) {
+      const t = item.track;
+      if (!t || t.is_local) continue;
+      all.push({
+        id: t.id,
+        uri: t.uri,
+        name: t.name,
+        artists: t.artists.map(a => a.name).join(', '),
+        art: t.album.images[1]?.url || t.album.images[0]?.url || '',
+        dur: t.duration_ms,
+      });
+    }
+    url = d.next;
+  }
+  return all;
+}
+
+/* ══════════════════════════════════════
+   SPOTIFY iFrame API
+══════════════════════════════════════ */
+window.onSpotifyIframeApiReady = (IFrameAPI) => {
+  const uri = pendUri || (tracks[0] ? 'spotify:track:' + tracks[0].id : 'spotify:track:7qiZfU4dY1lWllzX7mPBI3');
+  IFrameAPI.createController(document.getElementById('embed-slot'), { uri, theme: '0' }, (controller) => {
+    ctrl     = controller;
+    iframeRdy = true;
+
+    ctrl.addListener('playback_update', e => onPbUpdate(e.data));
+    ctrl.addListener('ready', () => {
+      if (pendUri) { ctrl.loadUri(pendUri); pendUri = null; }
+    });
+
+    if (tracks.length) playAt(idx, false);
+  });
+};
+
+function loadUri(uri) {
+  if (iframeRdy && ctrl) ctrl.loadUri(uri);
+  else pendUri = uri;
+}
+
+function onPbUpdate(d) {
+  const { isPaused, position, duration } = d;
+  isPlaying = !isPaused;
+  pos = position;
+  dur = duration;
+
+  document.getElementById('ico-play').style.display  = isPaused ? '' : 'none';
+  document.getElementById('ico-pause').style.display = isPaused ? 'none' : '';
+
+  document.getElementById('t-cur').textContent = fmt(position);
+  document.getElementById('t-tot').textContent = fmt(duration || 0);
+
+  if (!seeking && duration > 0) {
+    document.getElementById('seek-bar').value = Math.round((position / duration) * 1000);
+  }
+
+  // Auto-advance when track ends
+  if (isPaused && duration > 0 && position >= duration - 1500) {
+    setTimeout(() => nextTrack(true), 600);
+  }
+
+  // Detect track change (compare URI)
+  if (d.track?.uri) {
+    const newId = d.track.uri.split(':')[2];
+    const cur   = curTrack();
+    if (cur && cur.id !== newId) {
+      const fi = tracks.findIndex(t => t.id === newId);
+      if (fi !== -1) {
+        const oi = order.indexOf(fi);
+        if (oi !== -1) idx = oi;
+        renderCurTrack();
+      }
+    }
+  }
+}
+
+/* ══════════════════════════════════════
+   PLAYBACK
+══════════════════════════════════════ */
+function curTrack() {
+  return tracks.length ? tracks[order[idx]] : null;
+}
+
+function playAt(i, autoPlay = true) {
+  idx = i;
+  const t = curTrack();
+  if (!t) return;
+  loadUri('spotify:track:' + t.id);
+  if (autoPlay) setTimeout(() => ctrl?.play(), 300);
+  renderCurTrack();
+}
+
+function togglePlay() {
+  ctrl?.togglePlay();
+}
+
+function nextTrack(auto = false) {
+  idx = (idx + 1) % order.length;
+  playAt(idx, true);
+}
+
+function prevTrack() {
+  if (pos > 3000 && ctrl) { ctrl.seek(0); return; }
+  idx = (idx - 1 + order.length) % order.length;
+  playAt(idx, true);
+}
+
+function toggleShuffle() {
+  isShuffle = !isShuffle;
+  const btn = document.getElementById('btn-shuffle');
+  const lbl = document.getElementById('shuffle-label');
+  btn.classList.toggle('on', isShuffle);
+  lbl.textContent = isShuffle ? 'SHUFFLE ON' : 'SHUFFLE OFF';
+  lbl.style.color = isShuffle ? 'var(--green)' : 'var(--dim)';
+
+  const curTi = order[idx];
+  if (isShuffle) {
+    const rest = tracks.map((_, i) => i).filter(i => i !== curTi);
+    order = [curTi, ...shuffle(rest)];
+    idx   = 0;
+  } else {
+    order = tracks.map((_, i) => i);
+    idx   = curTi;
+  }
+}
+
+/* seek bar */
+function initSeekBar() {
+  const bar = document.getElementById('seek-bar');
+  bar.addEventListener('mousedown',  () => seeking = true);
+  bar.addEventListener('touchstart', () => seeking = true, { passive: true });
+  bar.addEventListener('input', e => {
+    if (dur > 0) document.getElementById('t-cur').textContent = fmt((e.target.value / 1000) * dur);
+  });
+  const doSeek = e => {
+    seeking = false;
+    if (dur > 0 && ctrl) ctrl.seek(Math.round((e.target.value / 1000) * dur));
+  };
+  bar.addEventListener('change',   doSeek);
+  bar.addEventListener('mouseup',  () => seeking = false);
+  bar.addEventListener('touchend', () => seeking = false);
+}
+
+/* ══════════════════════════════════════
+   VOTING
+══════════════════════════════════════ */
+function selectMember(name) {
+  member = name;
+  document.querySelectorAll('.member-btn').forEach(b => b.classList.toggle('active', b.dataset.name === name));
+  document.getElementById('vote-hint').textContent = 'Rate this song (click again to clear)';
+  renderStars();
+}
+
+function castVote(stars) {
+  if (!member) {
+    toast('Please select your name first ☝');
+    return;
+  }
+  const t = curTrack();
+  if (!t) return;
+
+  if (!votes[t.id]) votes[t.id] = {};
+  const prev = votes[t.id][member];
+
+  if (prev === stars) {
+    delete votes[t.id][member];
+    showVoteOk('Vote cleared');
+  } else {
+    const isUpdate = prev !== undefined;
+    votes[t.id][member] = stars;
+    showVoteOk(isUpdate ? `Updated to ${stars} ★` : `Voted ${stars} ★`);
+  }
+
+  localStorage.setItem(VOTES_KEY, JSON.stringify(votes));
+  renderStars();
+  renderSongVotes();
+  renderLeaderboard();
+}
+
+function showVoteOk(msg) {
+  const el = document.getElementById('vote-ok');
+  el.textContent = msg;
+  clearTimeout(voteOkTimer);
+  voteOkTimer = setTimeout(() => el.textContent = '', 2200);
+}
+
+function renderStars() {
+  const t     = curTrack();
+  const myV   = t && member ? (votes[t.id]?.[member] ?? 0) : 0;
+  const noMbr = !member;
+
+  document.querySelectorAll('.star-btn').forEach((btn, i) => {
+    btn.classList.toggle('lit',      i < myV);
+    btn.classList.toggle('disabled', noMbr);
+  });
+}
+
+/* ══════════════════════════════════════
+   RENDER
+══════════════════════════════════════ */
+function renderCurTrack() {
+  const t = curTrack();
+  if (!t) return;
+
+  document.getElementById('track-name').textContent  = t.name;
+  document.getElementById('artist-name').textContent = t.artists;
+
+  const img = document.getElementById('album-art');
+  img.src = t.art || '';
+  img.style.opacity = t.art ? '1' : '0';
+
+  renderStars();
+  renderSongVotes();
+  renderLeaderboard(); // refresh playing-row highlight
+}
+
+function renderMembers() {
+  document.getElementById('member-btns').innerHTML = members.map(name =>
+    `<button class="member-btn${member === name ? ' active' : ''}" data-name="${escH(name)}" onclick="selectMember(${JSON.stringify(name)})">${escH(name)}</button>`
+  ).join('');
+}
+
+function renderSongVotes() {
+  const t   = curTrack();
+  const el  = document.getElementById('song-votes');
+
+  if (!t || !votes[t.id] || !Object.keys(votes[t.id]).length) {
+    el.innerHTML = '<div class="no-votes-msg">No votes yet</div>';
+    return;
+  }
+
+  el.innerHTML = Object.entries(votes[t.id])
+    .sort((a, b) => b[1] - a[1])
+    .map(([n, s]) => {
+      const isMine = n === member;
+      return `<div class="vote-row">
+        <span class="voter-name ${isMine ? 'voter-mine' : ''}">${escH(n)}${isMine ? ' (you)' : ''}</span>
+        <span class="voter-stars">${'★'.repeat(s)}${'☆'.repeat(5 - s)}</span>
+      </div>`;
+    }).join('');
+}
+
+function renderLeaderboard() {
+  const el = document.getElementById('lb-body');
+  const sm = document.getElementById('lb-summary');
+
+  const scored = Object.entries(votes)
+    .map(([tid, tvotes]) => {
+      const t   = tracks.find(x => x.id === tid);
+      const arr = Object.values(tvotes);
+      if (!t || !arr.length) return null;
+      const total = arr.reduce((a, b) => a + b, 0);
+      return { t, count: arr.length, total, avg: total / arr.length };
+    })
+    .filter(Boolean)
+    .sort((a, b) => b.total - a.total || b.count - a.count)
+    .slice(0, 10);
+
+  const totalVoted = Object.keys(votes).filter(tid => Object.keys(votes[tid]).length > 0).length;
+  sm.textContent = totalVoted ? `${totalVoted} song${totalVoted !== 1 ? 's' : ''} voted · ${tracks.length} total` : '';
+
+  if (!scored.length) {
+    el.innerHTML = '<div class="lb-empty">Vote for songs to see the leaderboard</div>';
+    return;
+  }
+
+  const maxTotal = scored[0].total;
+  const medals   = ['🥇','🥈','🥉'];
+  const playId   = curTrack()?.id;
+
+  el.innerHTML = `<table class="lb-table">
+    <thead><tr>
+      <th>#</th><th>Song</th><th>Artist</th>
+      <th style="text-align:center">Votes</th>
+      <th style="text-align:center">Score</th>
+      <th style="text-align:center">Avg ★</th>
+      <th></th>
+    </tr></thead>
+    <tbody>${scored.map((r, i) => `
+      <tr class="${r.t.id === playId ? 'playing-row' : ''}">
+        <td class="lb-rank">${medals[i] ?? (i + 1)}</td>
+        <td class="lb-song">${escH(r.t.name)}</td>
+        <td class="lb-artist">${escH(r.t.artists)}</td>
+        <td class="lb-votes">${r.count}</td>
+        <td class="lb-score">${r.total}</td>
+        <td class="lb-avg">${r.avg.toFixed(1)}</td>
+        <td class="lb-bar-cell">
+          <div class="lb-bar">
+            <div class="lb-bar-fill" style="width:${Math.round((r.total / maxTotal) * 100)}%"></div>
+          </div>
+        </td>
+      </tr>`).join('')}
+    </tbody>
+  </table>`;
+}
+
+function escH(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ══════════════════════════════════════
+   SETUP SCREEN INIT
+══════════════════════════════════════ */
+function initSetupScreen() {
+  document.getElementById('redir-display').textContent = redir();
+  const cid = localStorage.getItem(CLIENT_KEY) || '';
+  document.getElementById('inp-client').value = cid;
+
+  const grid = document.getElementById('member-grid');
+  grid.innerHTML = members.map((name, i) =>
+    `<input class="m-inp fl input" type="text" value="${escH(name)}" placeholder="${DEFAULT_MEMBERS[i]}">`
+  ).join('');
+  // Re-add the fl input styling inline since these are inside member-grid
+  grid.querySelectorAll('.m-inp').forEach(el => {
+    el.style.cssText = 'width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--border);border-radius:9px;color:var(--text);font-size:13px;outline:none;';
+  });
+}
+
+function goSetup() {
+  initSetupScreen();
+  showScreen('screen-setup');
+}
+
+/* ══════════════════════════════════════
+   BOOT
+══════════════════════════════════════ */
+async function boot() {
+  // Load persisted data
+  votes   = JSON.parse(localStorage.getItem(VOTES_KEY)   || '{}');
+  members = JSON.parse(localStorage.getItem(MEMBERS_KEY) || JSON.stringify(DEFAULT_MEMBERS));
+
+  const params = new URLSearchParams(location.search);
+  const code   = params.get('code');
+  const err    = params.get('error');
+
+  if (err) { showError('Spotify auth error: ' + err); return; }
+
+  if (code) {
+    showScreen('screen-loading');
+    document.getElementById('load-msg').textContent = 'Exchanging auth code…';
+    try {
+      await exchangeCode(code);
+    } catch (e) {
+      showError(e.message);
+      return;
+    }
+  }
+
+  // Check for cached tracks first (avoid re-auth for 24h)
+  const cached = (() => {
+    try {
+      const c = JSON.parse(localStorage.getItem(TRACK_CACHE) || 'null');
+      return c && Date.now() - c.ts < 86400000 ? c.tracks : null;
+    } catch { return null; }
+  })();
+
+  if (cached) {
+    tracks = cached;
+    launchApp();
+    return;
+  }
+
+  const token = getToken();
+  if (!token) {
+    initSetupScreen();
+    showScreen('screen-setup');
+    return;
+  }
+
+  showScreen('screen-loading');
+  document.getElementById('load-msg').textContent = 'Fetching playlist…';
+
+  try {
+    tracks = await fetchTracks(token);
+    if (!tracks.length) throw new Error('No playable tracks found in the playlist.');
+    localStorage.setItem(TRACK_CACHE, JSON.stringify({ tracks, ts: Date.now() }));
+    launchApp();
+  } catch (e) {
+    showError(e.message);
+  }
+}
+
+function launchApp() {
+  order = shuffle(tracks.map((_, i) => i));
+  idx   = 0;
+
+  document.getElementById('hdr-count').textContent = tracks.length + ' songs';
+  renderMembers();
+  renderCurTrack();
+  renderLeaderboard();
+  initSeekBar();
+
+  showScreen('screen-main');
+
+  // Kick off the iFrame
+  pendUri = 'spotify:track:' + curTrack().id;
+  if (iframeRdy && ctrl) {
+    ctrl.loadUri(pendUri);
+    pendUri = null;
+  }
+  // (If iFrame not ready yet, onSpotifyIframeApiReady will pick up pendUri)
+}
+
+boot();
+</script>
+</body>
+</html>
