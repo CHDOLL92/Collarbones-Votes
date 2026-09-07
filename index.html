@@ -185,6 +185,14 @@ body {
   color: var(--text); font-size: 13px; outline: none; transition: border-color .2s;
 }
 .search-box:focus { border-color: var(--green); }
+.list-toolbar { display: flex; gap: 8px; align-items: center; }
+.list-toolbar .search-box { flex: 1; margin: 0; }
+.filter-btn {
+  flex-shrink: 0; padding: 8px 12px; border-radius: 9px; font-size: 12px; font-weight: 600;
+  background: var(--bg); border: 1px solid var(--border); color: var(--dim);
+  cursor: pointer; white-space: nowrap; transition: background .15s, color .15s, border-color .15s;
+}
+.filter-btn.active { background: var(--green); color: #000; border-color: var(--green); }
 .song-list {
   flex: 1; overflow-y: auto; display: flex; flex-direction: column;
   gap: 3px; min-height: 0;
@@ -280,6 +288,8 @@ body {
 .lbb { height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
 .lbf { height: 100%; background: linear-gradient(90deg, var(--green), var(--accent)); border-radius: 3px; transition: width .4s; }
 .lb-empty { color: var(--dim); font-size: 14px; padding: 10px 0; }
+.lb-voters { font-size: 11px; margin-top: 4px; display: flex; flex-wrap: wrap; gap: 4px 10px; }
+.lb-voters span { color: var(--star); white-space: nowrap; }
 
 /* ── Toast ── */
 .toast {
@@ -397,7 +407,10 @@ body {
     <!-- Song List -->
     <section class="list-section">
       <h2>🎵 Playlist</h2>
-      <input class="search-box" id="search" type="text" placeholder="Search songs or artists…" oninput="renderList()">
+      <div class="list-toolbar">
+        <input class="search-box" id="search" type="text" placeholder="Search songs or artists…" oninput="renderList()">
+        <button id="btn-filter" class="filter-btn" onclick="toggleUnvotedFilter()" title="Show only songs you haven't voted for">Unvoted</button>
+      </div>
       <div class="song-list" id="song-list"></div>
     </section>
 
@@ -436,6 +449,7 @@ body {
     <div class="lb-hdr">
       <h2>🏆 Top 10 Songs</h2>
       <span id="lb-sum" class="lb-sum"></span>
+      <button class="filter-btn" style="font-size:11px;padding:5px 10px" onclick="resetVotes()" title="Clear all votes">Reset votes</button>
     </div>
     <div id="lb-body"><div class="lb-empty">Vote for songs to see the leaderboard</div></div>
   </section>
@@ -462,9 +476,10 @@ let votes    = {};
 let members  = DEFAULT_M.slice();
 let member   = null;      // selected member
 let selId    = null;      // selected track id
-let isShuffle = true;
-let seeking   = false;
-let voteT     = null;
+let isShuffle    = true;
+let seeking      = false;
+let voteT        = null;
+let filterUnvoted = false;
 
 const audio = document.getElementById('audio');
 
@@ -717,6 +732,20 @@ function renderSongVotes() {
   }).join('');
 }
 
+function toggleUnvotedFilter() {
+  filterUnvoted = !filterUnvoted;
+  document.getElementById('btn-filter').classList.toggle('active', filterUnvoted);
+  renderList();
+}
+
+function resetVotes() {
+  if (!confirm('Reset ALL votes for everyone? This cannot be undone.')) return;
+  votes = {};
+  localStorage.removeItem(K_VOTES);
+  renderStars(); renderSongVotes(); renderList(); renderLeaderboard();
+  toast('All votes cleared');
+}
+
 function renderList() {
   const q = document.getElementById('search').value.toLowerCase();
   const el = document.getElementById('song-list');
@@ -724,8 +753,13 @@ function renderList() {
     ? tracks.filter(t => t.name.toLowerCase().includes(q) || t.artists.toLowerCase().includes(q))
     : [...tracks];
 
+  // Unvoted-only filter: requires a member to be selected
+  if (filterUnvoted && member) {
+    list = list.filter(t => votes[t.id]?.[member] === undefined);
+  }
+
   // When a member is selected and no search active, sort unvoted songs to top
-  if (member && !q) {
+  if (member && !q && !filterUnvoted) {
     list.sort((a, b) => {
       const aVoted = votes[a.id]?.[member] !== undefined;
       const bVoted = votes[b.id]?.[member] !== undefined;
@@ -797,14 +831,19 @@ function renderLeaderboard() {
       <th style="text-align:center">Votes</th>
       <th style="text-align:center">Score</th>
     </tr></thead>
-    <tbody>${scored.map((r,i) => `
-      <tr class="${r.t.id===selId?'lb-cur':''}">
+    <tbody>${scored.map((r,i) => {
+      const voterDetails = Object.entries(votes[r.t.id] ?? {})
+        .sort((a,b) => b[1]-a[1])
+        .map(([n,s]) => `<span>${esc(n)}&nbsp;${'★'.repeat(s)}</span>`)
+        .join('');
+      return `<tr class="${r.t.id===selId?'lb-cur':''}">
         <td class="rk">${medals[i]??i+1}</td>
-        <td class="sn">${esc(r.t.name)}</td>
+        <td class="sn">${esc(r.t.name)}<div class="lb-voters">${voterDetails}</div></td>
         <td class="ar">${esc(r.t.artists)}</td>
         <td class="nv">${r.count}</td>
         <td class="sc">${r.total}</td>
-      </tr>`).join('')}
+      </tr>`;
+    }).join('')}
     </tbody></table>`;
 }
 
