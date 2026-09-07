@@ -346,6 +346,7 @@ body {
     <div class="app-title">🎸 Collarbones song tour</div>
     <div class="hdr-right">
       <span class="hdr-count" id="hdr-count"></span>
+      <button class="btn-sm" onclick="refreshPlaylist()">↺ Refresh</button>
       <button class="btn-sm" onclick="goSetup()">⚙ Change playlist</button>
     </div>
   </header>
@@ -656,6 +657,7 @@ function selectMember(name) {
   document.querySelectorAll('.member-btn').forEach(b => b.classList.toggle('active', b.dataset.name === name));
   updateVoteHint();
   renderStars();
+  renderList(); // re-sort to show unvoted songs first for this member
 }
 
 function updateVoteHint() {
@@ -715,26 +717,51 @@ function renderSongVotes() {
 function renderList() {
   const q = document.getElementById('search').value.toLowerCase();
   const el = document.getElementById('song-list');
-  const list = q ? tracks.filter(t => t.name.toLowerCase().includes(q) || t.artists.toLowerCase().includes(q)) : tracks;
+  let list = q
+    ? tracks.filter(t => t.name.toLowerCase().includes(q) || t.artists.toLowerCase().includes(q))
+    : [...tracks];
+
+  // When a member is selected and no search active, sort unvoted songs to top
+  if (member && !q) {
+    list.sort((a, b) => {
+      const aVoted = votes[a.id]?.[member] !== undefined;
+      const bVoted = votes[b.id]?.[member] !== undefined;
+      if (aVoted === bVoted) return 0;
+      return aVoted ? 1 : -1; // unvoted first
+    });
+  }
 
   el.innerHTML = list.map(t => {
-    const v   = votes[t.id] ?? {};
-    const arr = Object.values(v);
-    const tot = arr.reduce((a,b) => a+b, 0);
-    const avg = arr.length ? (tot/arr.length).toFixed(1) : null;
-    const sel = t.id === selId;
-    const noP = !t.preview;
+    const v    = votes[t.id] ?? {};
+    const arr  = Object.values(v);
+    const tot  = arr.reduce((a,b) => a+b, 0);
+    const avg  = arr.length ? (tot/arr.length).toFixed(1) : null;
+    const sel  = t.id === selId;
+    const noP  = !t.preview;
+    const myV  = member ? votes[t.id]?.[member] : undefined;
+    const tag  = myV !== undefined
+      ? `<span class="sr-pill" style="color:var(--green)">You: ${'★'.repeat(myV)}</span>`
+      : (avg ? `<span class="sr-pill">${avg}★ (${arr.length})</span>` : '');
 
-    return `<div class="song-row${sel ? ' sel' : ''}${noP ? ' no-prev' : ''}" onclick="${noP ? "toast('No preview for this song')" : `playTrackById('${t.id}')`}">
+    return `<div class="song-row${sel ? ' sel' : ''}${noP ? ' no-prev' : ''}" data-id="${t.id}"
+        onclick="handleSongClick(this)">
       <img class="sr-art" src="${esc(t.art)}" alt="" loading="lazy">
       <div class="sr-info">
         <div class="sr-name">${esc(t.name)}</div>
         <div class="sr-by">${esc(t.artists)}</div>
       </div>
-      ${avg ? `<span class="sr-pill">${avg}★ (${arr.length})</span>` : ''}
+      ${tag}
       ${sel ? '<span class="sr-play">▶</span>' : ''}
     </div>`;
   }).join('');
+}
+
+function handleSongClick(el) {
+  const id = el.dataset.id;
+  const t  = tracks.find(x => x.id === id);
+  if (!t) return;
+  if (!t.preview) { toast('No preview available for this song'); return; }
+  playTrackById(id);
 }
 
 function renderMembers() {
@@ -762,9 +789,11 @@ function renderLeaderboard() {
   const medals = ['🥇','🥈','🥉'];
 
   el.innerHTML = `<table class="lb-table">
-    <thead><tr><th>#</th><th>Song</th><th>Artist</th>
-    <th style="text-align:center">Votes</th><th style="text-align:center">Score</th>
-    <th style="text-align:center">Avg ★</th><th></th></tr></thead>
+    <thead><tr>
+      <th>#</th><th>Song</th><th>Artist</th>
+      <th style="text-align:center">Votes</th>
+      <th style="text-align:center">Score</th>
+    </tr></thead>
     <tbody>${scored.map((r,i) => `
       <tr class="${r.t.id===selId?'lb-cur':''}">
         <td class="rk">${medals[i]??i+1}</td>
@@ -772,8 +801,6 @@ function renderLeaderboard() {
         <td class="ar">${esc(r.t.artists)}</td>
         <td class="nv">${r.count}</td>
         <td class="sc">${r.total}</td>
-        <td class="av">${r.avg.toFixed(1)}</td>
-        <td class="bc"><div class="lbb"><div class="lbf" style="width:${Math.round((r.total/max)*100)}%"></div></div></td>
       </tr>`).join('')}
     </tbody></table>`;
 }
@@ -834,6 +861,29 @@ function launchApp() {
   renderLeaderboard();
   initSeekBar();
   showScreen('s-main');
+}
+
+async function refreshPlaylist() {
+  const cached = JSON.parse(localStorage.getItem(K_TRACKS) || 'null');
+  const pid = cached?.pid;
+  if (!pid) { toast('No playlist loaded yet'); return; }
+
+  document.getElementById('hdr-count').textContent = 'Refreshing…';
+  try {
+    const fresh = await fetchDeezerTracks(pid);
+    if (!fresh.length) throw new Error('No tracks returned');
+    tracks = fresh;
+    localStorage.setItem(K_TRACKS, JSON.stringify({ tracks, pid, ts: Date.now() }));
+    order  = shuffle(tracks.map((_,i) => i));
+    curIdx = 0;
+    document.getElementById('hdr-count').textContent = tracks.length + ' songs';
+    renderList();
+    renderLeaderboard();
+    toast(`Playlist refreshed — ${tracks.length} songs`);
+  } catch(e) {
+    document.getElementById('hdr-count').textContent = tracks.length + ' songs';
+    toast('Refresh failed: ' + e.message);
+  }
 }
 
 async function boot() {
